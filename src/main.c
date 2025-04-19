@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 // #include <unistd.h>
+
 #include "hotrace.h"
 
 t_hash_table *ht_create(size_t size) {
@@ -83,7 +84,7 @@ void ll()
 }
 int main()
 {
-    atexit(ll);
+    // atexit(ll);
     char *result;
     t_hash_table *ht = ht_create(100003);
     // ht_insert(ht, "rag-1", "value1");
@@ -98,24 +99,22 @@ int main()
         key = get_next_line(0);
         if (key && key[strlen(key) - 1] == '\n')
             key[strlen(key) - 1] = '\0';
+        if (!key || !key[0])
+        {
+            free(key);
+            break;
+        }
+
         value = get_next_line(0);
         if (value && value[strlen(value) - 1] == '\n')
             value[strlen(value) - 1] = '\0';
-        if ((!key && !value) || (!key[0] && !value[0]))
+        if (!value || !value[0])
         {
-            free(key);
-            free(value);
-            break;
-        }
-        if (!key || !value || !key[0] || !value[0])
-        {
-
-            printf("empty value !\n");
+            printf("Error: value is empty\n");
             free(key);
             free(value);
             ht_free(ht);
-            return 0;
-            // break;
+            return 1;
         }
         ht_insert(ht, key, value);
         free(key);

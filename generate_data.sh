@@ -7,10 +7,10 @@ generate_random_string() {
 }
 
 # File name for the test file
-filename="test_file.txt"
+filename="basic"
 
 # Number of insertions (key-value pairs)
-num_insertions=10000
+num_insertions=1000000000000000000
 
 # Create a new test file (overwrite if exists)
 > "$filename"
@@ -33,7 +33,7 @@ done
 
 # After the key-value pairs, leave two empty lines
 echo "" >> "$filename"
-echo "" >> "$filename"
+# echo "" >> "$filename"
 
 # After insertions, write the keys only for lookup simulation
 for key in "${keys[@]}"; do

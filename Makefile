@@ -2,7 +2,7 @@ NAME = hotrace
 
 CC = cc
 
-CFLAGS = -Wall -Wextra -Werror #./get_next_line/get_next_line.c ./get_next_line/get_next_line_utils.c #-I ./get-next-line
+CFLAGS = #-Wall -Wextra -Werror #./get_next_line/get_next_line.c ./get_next_line/get_next_line_utils.c #-I ./get-next-line
 
 SRCS = src/main.c ./get_next_line/get_next_line.c ./get_next_line/get_next_line_utils.c
 
