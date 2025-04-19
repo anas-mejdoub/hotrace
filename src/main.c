@@ -6,7 +6,7 @@
 /*   By: amejdoub <amejdoub@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:29:42 by amejdoub          #+#    #+#             */
-/*   Updated: 2025/04/18 16:39:27 by amejdoub         ###   ########.fr       */
+/*   Updated: 2025/04/19 20:34:37 by amejdoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,16 +77,22 @@ void ht_free(t_hash_table *ht) {
     free(ht);
 }
 #include <stdio.h>
-
+void ll()
+{
+    system("leaks hotrace");
+}
 int main()
 {
+    atexit(ll);
+    char *result;
     t_hash_table *ht = ht_create(100003);
     ht_insert(ht, "rag-1", "value1");
     ht_insert(ht, "rag-2", "value2");
     unsigned long long i = 0;
-    // int n;
     char *key = NULL;
     char *value = NULL;
+
+    // First loop
     while (1)
     {
         key = get_next_line(0);
@@ -96,25 +102,42 @@ int main()
         if (value && value[strlen(value) - 1] == '\n')
             value[strlen(value) - 1] = '\0';
         if (!key || !value || !key[0] || !value[0])
+        {
+            free(key);
+            free(value);
             break;
-        printf ("key :<%s> | value :<%s>\n", key, value);
+        }
         ht_insert(ht, key, value);
         free(key);
         free(value);
         i++;
     }
-    write(1, "search for a key !\n", 19);
-    key = get_next_line(0);
-    if (key && key[strlen(key) - 1] == '\n')
-        key[strlen(key) - 1] = '\0';
-    printf("first Key :%s\n", key);
-    char *result = ht_search(ht, key);
-    free(key);
-    key = get_next_line(0);
-    if (key && key[strlen(key) - 1] == '\n')
-        key[strlen(key) - 1] = '\0';
-    printf("second Key :%s\n", key);
-    char *result2 = ht_search(ht, key);
-    printf("%s | %s\n", result, result2);
+
+    // Second loop
+    while (1)
+    {
+        key = get_next_line(0);
+        if (key && key[strlen(key) - 1] == '\n')
+            key[strlen(key) - 1] = '\0';
+        if (!key || !key[0])
+        {
+            free(key);
+            break;
+        }
+        result = ht_search(ht, key);
+        write(1, key, strlen(key)); 
+        if (!result)
+        {
+            write(1, ":not found\n", 12);
+        }
+        else
+        {
+            write(1, ":", 1);
+            write(1, result, strlen(result));
+            write(1, "\n", 1);
+        }
+        free(key);
+    }
+
     ht_free(ht);
 }
