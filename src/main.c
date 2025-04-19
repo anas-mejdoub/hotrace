@@ -79,15 +79,15 @@ void ht_free(t_hash_table *ht) {
 #include <stdio.h>
 void ll()
 {
-    system("leaks hotrace");
+    // system("leaks hotrace");
 }
 int main()
 {
     atexit(ll);
     char *result;
     t_hash_table *ht = ht_create(100003);
-    ht_insert(ht, "rag-1", "value1");
-    ht_insert(ht, "rag-2", "value2");
+    // ht_insert(ht, "rag-1", "value1");
+    // ht_insert(ht, "rag-2", "value2");
     unsigned long long i = 0;
     char *key = NULL;
     char *value = NULL;
@@ -101,11 +101,21 @@ int main()
         value = get_next_line(0);
         if (value && value[strlen(value) - 1] == '\n')
             value[strlen(value) - 1] = '\0';
-        if (!key || !value || !key[0] || !value[0])
+        if ((!key && !value) || (!key[0] && !value[0]))
         {
             free(key);
             free(value);
             break;
+        }
+        if (!key || !value || !key[0] || !value[0])
+        {
+
+            printf("empty value !\n");
+            free(key);
+            free(value);
+            ht_free(ht);
+            return 0;
+            // break;
         }
         ht_insert(ht, key, value);
         free(key);
