@@ -3,15 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   ft_strcmp.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: amejdoub <amejdoub@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yabenman <yabenman@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 16:42:04 by amejdoub          #+#    #+#             */
-/*   Updated: 2025/04/20 16:43:18 by amejdoub         ###   ########.fr       */
+/*   Updated: 2025/04/20 16:52:58 by yabenman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../hotrace.h"
-
 
 int	ft_strcmp(const char *str1, const char *str2)
 {
