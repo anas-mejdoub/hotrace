@@ -1,33 +1,39 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strdup.c                                        :+:      :+:    :+:   */
+/*   hash.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: yabenman <yabenman@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/04/20 16:30:11 by amejdoub          #+#    #+#             */
-/*   Updated: 2025/04/20 17:23:21 by yabenman         ###   ########.fr       */
+/*   Created: 2025/04/20 17:08:37 by amejdoub          #+#    #+#             */
+/*   Updated: 2025/04/20 17:30:50 by yabenman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../hotrace.h"
 
-char	*ft_strdup(const char *str)
+unsigned long	hash(char *key, size_t table_size)
 {
-	int		len;
-	char	*res;
-	int		i;
+	unsigned long	h;
 
-	i = 0;
-	len = ft_strlen(str);
-	res = malloc(sizeof(char) * len + 1);
-	if (!res)
-		return (NULL);
-	while (str[i])
+	h = 0;
+	while (*key)
 	{
-		res[i] = str[i];
-		i++;
+		h = (h * 31) + *key;
+		++key;
 	}
-	res[i] = '\0';
-	return (res);
+	return (h % table_size);
+}
+
+unsigned long	hash2(char *key)
+{
+	unsigned long	h;
+
+	h = 0;
+	while (*key)
+	{
+		h = (h * 17) + *key;
+		++key;
+	}
+	return (h | 1);
 }

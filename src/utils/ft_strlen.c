@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   ft_strlen.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: amejdoub <amejdoub@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yabenman <yabenman@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 16:30:49 by amejdoub          #+#    #+#             */
-/*   Updated: 2025/04/20 16:34:16 by amejdoub         ###   ########.fr       */
+/*   Updated: 2025/04/20 17:22:11 by yabenman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../hotrace.h"
 
-size_t	ft_strlen2(const char *s)
+size_t	ft_strlen(const char *s)
 {
 	int	i;
 

@@ -5,15 +5,16 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: yabenman <yabenman@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/04/20 17:01:30 by yabenman          #+#    #+#             */
-/*   Updated: 2025/04/20 17:09:05 by yabenman         ###   ########.fr       */
+/*   Created: 2025/04/20 17:17:17 by yabenman          #+#    #+#             */
+/*   Updated: 2025/04/20 17:48:39 by yabenman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-# include "../hotrace.h"
+#include "../hotrace.h"
 
-char *get_line(int fd) {
-    static InputBuffer b = { .pos = 0, .size = 0 };
+char	*get_line(int fd)
+{
+    static  t_input_buffer b =  { .pos = 0, .size = 0 };
     char *line = NULL;
     size_t line_size = 0, capacity = 128;
 

@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "hotrace.h": "c"
+        "hotrace.h": "c",
+        "get_next_line.h": "c"
     }
 }
