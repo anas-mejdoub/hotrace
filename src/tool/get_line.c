@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_line.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yabenman <yabenman@student.42.fr>          +#+  +:+       +#+        */
+/*   By: amejdoub <amejdoub@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 17:49:47 by yabenman          #+#    #+#             */
-/*   Updated: 2025/04/20 18:10:22 by yabenman         ###   ########.fr       */
+/*   Updated: 2025/04/20 18:43:14 by amejdoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,6 +81,7 @@ static char	*read_and_process(t_input_buffer *b, t_line_ctx *ctx, int fd)
 			return (ctx->line);
 		}
 		free(ctx->line);
+		ctx->line = NULL;
 		return (NULL);
 	}
 	result = process_line_chunk(b, ctx);
@@ -105,5 +106,10 @@ char	*get_line(int fd)
 		result = read_and_process(&b, &ctx, fd);
 		if (result)
 			return (result);
+		if (b.size <= 0 && ctx.line_size == 0)
+		{
+			free(ctx.line);
+			return (NULL);
+		}
 	}
 }
