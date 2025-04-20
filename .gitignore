@@ -2,3 +2,6 @@ test_file.txt
 test
 test06.htr
 test*
+gen.py
+.gitignore
+generate_data.sh
