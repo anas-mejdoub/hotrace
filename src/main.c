@@ -6,13 +6,86 @@
 /*   By: amejdoub <amejdoub@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:29:42 by amejdoub          #+#    #+#             */
-/*   Updated: 2025/04/19 20:34:37 by amejdoub         ###   ########.fr       */
+/*   Updated: 2025/04/20 13:43:29 by amejdoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 // #include <unistd.h>
 
 #include "hotrace.h"
+
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define GNL_BUFFER_SIZE 65536  // 64KB (optimal for modern SSDs)
+
+typedef struct {
+    char buffer[GNL_BUFFER_SIZE];
+    size_t start;
+    size_t end;
+} Buffer;
+
+char *get_line(int fd) {
+    static Buffer b = { .start = 0, .end = 0 };
+    
+    while (1) {
+        // Refill buffer when empty
+        if (b.start >= b.end) {
+            b.start = 0;
+            b.end = read(fd, b.buffer, GNL_BUFFER_SIZE);
+            if (b.end <= 0) return NULL;
+        }
+
+        // Scan for newline
+        char *nl = memchr(b.buffer + b.start, '\n', b.end - b.start);
+        if (nl) {
+            size_t line_len = nl - (b.buffer + b.start) + 1;
+            char *line = malloc(line_len + 1);
+            memcpy(line, b.buffer + b.start, line_len);
+            line[line_len] = '\0';
+            b.start += line_len;
+            return line;
+        }
+
+        // No newline - accumulate
+        char *accumulated = malloc(b.end - b.start + 1);
+        memcpy(accumulated, b.buffer + b.start, b.end - b.start);
+        accumulated[b.end - b.start] = '\0';
+        b.start = b.end;
+    }
+}
+
+
+
+
+char output_buffer[65536];
+size_t buffer_pos = 0;
+
+void flush_buffer() {
+    if (buffer_pos > 0) {
+        write(1, output_buffer, buffer_pos);
+        buffer_pos = 0;
+    }
+}
+
+void buffered_write(const char *str) {
+    size_t len = strlen(str);
+    
+    while (len > 0) {
+        size_t space = 4096 - buffer_pos;
+        size_t to_copy = len < space ? len : space;
+        
+        memcpy(output_buffer + buffer_pos, str, to_copy);
+        buffer_pos += to_copy;
+        str += to_copy;
+        len -= to_copy;
+        
+        if (buffer_pos == 4096) {
+            flush_buffer();
+        }
+    }
+}
 
 t_hash_table *ht_create(size_t size) {
     t_hash_table *ht = malloc(sizeof(t_hash_table));
@@ -78,17 +151,13 @@ void ht_free(t_hash_table *ht) {
     free(ht);
 }
 #include <stdio.h>
-void ll()
-{
-    // system("leaks hotrace");
-}
+
 int main()
 {
-    // atexit(ll);
     char *result;
-    t_hash_table *ht = ht_create(100003);
-    // ht_insert(ht, "rag-1", "value1");
-    // ht_insert(ht, "rag-2", "value2");
+    // char *bulk_write;
+    t_hash_table *ht = ht_create(100000003);
+
     unsigned long long i = 0;
     char *key = NULL;
     char *value = NULL;
@@ -96,7 +165,7 @@ int main()
     // First loop
     while (1)
     {
-        key = get_next_line(0);
+        key = get_line(0);
         if (key && key[strlen(key) - 1] == '\n')
             key[strlen(key) - 1] = '\0';
         if (!key || !key[0])
@@ -105,9 +174,10 @@ int main()
             break;
         }
 
-        value = get_next_line(0);
+        value = get_line(0);
         if (value && value[strlen(value) - 1] == '\n')
             value[strlen(value) - 1] = '\0';
+        printf("key %s | value %s\n", key, value);
         if (!value || !value[0])
         {
             printf("Error: value is empty\n");
@@ -117,6 +187,7 @@ int main()
             return 1;
         }
         ht_insert(ht, key, value);
+
         free(key);
         free(value);
         i++;
@@ -125,7 +196,7 @@ int main()
     // Second loop
     while (1)
     {
-        key = get_next_line(0);
+        key = get_line(0);
         if (key && key[strlen(key) - 1] == '\n')
             key[strlen(key) - 1] = '\0';
         if (!key || !key[0])
@@ -134,19 +205,20 @@ int main()
             break;
         }
         result = ht_search(ht, key);
-        write(1, key, strlen(key)); 
+        
         if (!result)
         {
-            write(1, ":not found\n", 12);
+            write(1, key, strlen(key));
+            write(1, ":not found\n", 11);
         }
         else
         {
-            write(1, ":", 1);
+            // write(1, key, strlen(key));
             write(1, result, strlen(result));
             write(1, "\n", 1);
         }
         free(key);
     }
-
+    flush_buffer();
     ht_free(ht);
 }
