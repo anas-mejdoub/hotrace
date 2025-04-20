@@ -3,16 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   get_line.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yabenman <yabenman@student.42.fr>          +#+  +:+       +#+        */
+/*   By: amejdoub <amejdoub@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 17:01:30 by yabenman          #+#    #+#             */
-/*   Updated: 2025/04/20 17:01:51 by yabenman         ###   ########.fr       */
+/*   Updated: 2025/04/20 17:07:13 by amejdoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 # include "../hotrace.h"
 
-char *get_line(int fd) {
+char *get_line(int fd)
+{
     static InputBuffer b = { .pos = 0, .size = 0 };
     char *line = NULL;
     size_t line_size = 0, capacity = 128;

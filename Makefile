@@ -4,7 +4,8 @@ CC = cc
 
 CFLAGS = -Wall -Wextra -Werror #./get_next_line/get_next_line.c ./get_next_line/get_next_line_utils.c #-I ./get-next-line
 
-SRCS = src/main.c ./get_next_line/get_next_line.c ./get_next_line/get_next_line_utils.c src/utils/ft_memcpy.c src/utils/ft_memchr.c src/utils/ft_strdup.c src/utils/ft_strlen.c src/utils/ft_strcmp.c src/utils/ft_calloc.c src/utils/ft_bzero.c
+SRCS = src/main.c ./get_next_line/get_next_line.c ./get_next_line/get_next_line_utils.c src/utils/ft_memcpy.c src/utils/ft_memchr.c src/utils/ft_strdup.c src/utils/ft_strlen.c src/utils/ft_strcmp.c src/utils/ft_calloc.c src/utils/ft_bzero.c \
+		src/tool/get_line.c src/helpers/ft_hts.c src/helpers/hash.c
 
 OBJS = $(SRCS:.c=.o)
 

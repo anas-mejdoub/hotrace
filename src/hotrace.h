@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   hotrace.h                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yabenman <yabenman@student.42.fr>          +#+  +:+       +#+        */
+/*   By: amejdoub <amejdoub@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:30:10 by amejdoub          #+#    #+#             */
-/*   Updated: 2025/04/20 17:00:49 by yabenman         ###   ########.fr       */
+/*   Updated: 2025/04/20 17:12:24 by amejdoub         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,5 +51,12 @@ size_t		ft_strlen2(const char *s);
 int			ft_strcmp(const char *str1, const char *str2);
 void		ft_bzero(void *s, size_t n);
 void		*ft_calloc(size_t num_elements, size_t element_size);
-
+char *get_line(int fd);
+unsigned long hash(char *key, size_t table_size);
+unsigned long hash2(char *key);
+t_hash_table *ht_create(size_t size);
+void ht_resize(t_hash_table *ht);
+void ht_insert(t_hash_table *ht, char *key, char *value);
+char *ht_search(t_hash_table *ht, char *key);
+void ht_free(t_hash_table *ht);
 #endif
