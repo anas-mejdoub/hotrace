@@ -14,8 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
-#define BUFFER_SIZE 8192
+#include "hotrace.h"
+#define GET_BUFFER_SIZE 8192
 #define OUTPUT_BUFFER_SIZE 8192
 #define INITIAL_TABLE_SIZE 1048576 // 2^20, a power of 2 for faster modulo
 #define MAX_LOAD_FACTOR 0.7
@@ -33,7 +33,7 @@ typedef struct s_hash_table {
 } t_hash_table;
 
 typedef struct {
-    char buffer[BUFFER_SIZE];
+    char buffer[GET_BUFFER_SIZE];
     size_t pos;
     size_t size;
 } InputBuffer;
@@ -48,7 +48,7 @@ char *get_line(int fd) {
 
     while (1) {
         if (b.pos >= b.size) {
-            b.size = read(fd, b.buffer, BUFFER_SIZE);
+            b.size = read(fd, b.buffer, GET_BUFFER_SIZE);
             b.pos = 0;
             if (b.size <= 0) {
                 if (line_size > 0) {
@@ -61,7 +61,7 @@ char *get_line(int fd) {
         }
 
         size_t remaining = b.size - b.pos;
-        char *nl = memchr(b.buffer + b.pos, '\n', remaining);
+        char *nl = ft_memchr(b.buffer + b.pos, '\n', remaining);
         size_t len = nl ? (size_t)(nl - (b.buffer + b.pos)) : remaining;
 
         if (line_size + len + 1 > capacity) {
@@ -74,37 +74,13 @@ char *get_line(int fd) {
             line = new_line;
         }
 
-        memcpy(line + line_size, b.buffer + b.pos, len);
+        ft_memcpy(line + line_size, b.buffer + b.pos, len);
         line_size += len;
         b.pos += len + (nl ? 1 : 0);
 
         if (nl) {
             line[line_size] = '\0';
             return line;
-        }
-    }
-}
-
-char output_buffer[OUTPUT_BUFFER_SIZE];
-size_t buffer_pos = 0;
-
-void flush_buffer() {
-    write(1, output_buffer, buffer_pos);
-    buffer_pos = 0;
-}
-
-void buffered_write(const char *str, size_t len) {
-    while (len > 0) {
-        size_t space = OUTPUT_BUFFER_SIZE - buffer_pos;
-        size_t to_copy = len < space ? len : space;
-
-        memcpy(output_buffer + buffer_pos, str, to_copy);
-        buffer_pos += to_copy;
-        str += to_copy;
-        len -= to_copy;
-
-        if (buffer_pos >= OUTPUT_BUFFER_SIZE) {
-            flush_buffer();
         }
     }
 }
@@ -130,7 +106,7 @@ t_hash_table *ht_create(size_t size) {
     if (!ht) return NULL;
     ht->size = size;
     ht->count = 0;
-    ht->entries = calloc(size, sizeof(t_entry));
+    ht->entries = ft_calloc(size, sizeof(t_entry));
     if (!ht->entries) {
         free(ht);
         return NULL;
@@ -146,7 +122,7 @@ void ht_resize(t_hash_table *ht) {
     t_entry *old_entries = ht->entries;
     size_t old_size = ht->size;
 
-    ht->entries = calloc(new_size, sizeof(t_entry));
+    ht->entries = ft_calloc(new_size, sizeof(t_entry));
     if (!ht->entries) {
         ht->entries = old_entries;
         return;
@@ -174,9 +150,9 @@ void ht_insert(t_hash_table *ht, char *key, char *value) {
     size_t index = h1;
 
     while (ht->entries[index].occupied == 1) {
-        if (strcmp(ht->entries[index].key, key) == 0) {
+        if (ft_strcmp(ht->entries[index].key, key) == 0) {
             free(ht->entries[index].value);
-            ht->entries[index].value = strdup(value);
+            ht->entries[index].value = ft_strdup(value);
             return;
         }
         index = (index + h2) % ht->size;
@@ -185,8 +161,8 @@ void ht_insert(t_hash_table *ht, char *key, char *value) {
     if (ht->entries[index].occupied == 0) {
         ht->count++;
     }
-    ht->entries[index].key = strdup(key);
-    ht->entries[index].value = strdup(value);
+    ht->entries[index].key = ft_strdup(key);
+    ht->entries[index].value = ft_strdup(value);
     ht->entries[index].occupied = 1;
 }
 
@@ -196,7 +172,7 @@ char *ht_search(t_hash_table *ht, char *key) {
     size_t index = h1;
 
     while (ht->entries[index].occupied != 0) {
-        if (ht->entries[index].occupied == 1 && strcmp(ht->entries[index].key, key) == 0) {
+        if (ht->entries[index].occupied == 1 && ft_strcmp(ht->entries[index].key, key) == 0) {
             return ht->entries[index].value;
         }
         index = (index + h2) % ht->size;
@@ -247,16 +223,14 @@ int main(void) {
         }
         result = ht_search(ht, key);
         if (result) {
-            write(1, result, strlen(result));
+            write(1, result, ft_strlen(result));
             write(1, "\n", 1);
         } else {
-            write(1, key, strlen(key));
+            write(1, key, ft_strlen(key));
             write(1, ": not found\n", 12);
         }
         free(key);
     }
-
-    flush_buffer();
     ht_free(ht);
     return 0;
 }
