@@ -3,222 +3,260 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: amejdoub <amejdoub@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yabenman <yabenman@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/04/18 15:29:42 by amejdoub          #+#    #+#             */
-/*   Updated: 2025/04/20 13:43:29 by amejdoub         ###   ########.fr       */
+/*   Created: 2025/04/18 15:29:42 by amejdoub        #+#    #+#             */
+/*   Updated: 2025/04/20 15:03:35 by yabenman       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
-// #include <unistd.h>
-
-#include "hotrace.h"
 
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
-#define GNL_BUFFER_SIZE 65536  // 64KB (optimal for modern SSDs)
+#define BUFFER_SIZE 8192
+#define OUTPUT_BUFFER_SIZE 8192
+#define INITIAL_TABLE_SIZE 1048576 // 2^20, a power of 2 for faster modulo
+#define MAX_LOAD_FACTOR 0.7
+
+typedef struct s_entry {
+    char *key;
+    char *value;
+    int occupied; // 0: empty, 1: occupied, 2: deleted
+} t_entry;
+
+typedef struct s_hash_table {
+    size_t size;
+    size_t count;
+    t_entry *entries;
+} t_hash_table;
 
 typedef struct {
-    char buffer[GNL_BUFFER_SIZE];
-    size_t start;
-    size_t end;
-} Buffer;
+    char buffer[BUFFER_SIZE];
+    size_t pos;
+    size_t size;
+} InputBuffer;
 
 char *get_line(int fd) {
-    static Buffer b = { .start = 0, .end = 0 };
-    
+    static InputBuffer b = { .pos = 0, .size = 0 };
+    char *line = NULL;
+    size_t line_size = 0, capacity = 128;
+
+    line = malloc(capacity);
+    if (!line) return NULL;
+
     while (1) {
-        // Refill buffer when empty
-        if (b.start >= b.end) {
-            b.start = 0;
-            b.end = read(fd, b.buffer, GNL_BUFFER_SIZE);
-            if (b.end <= 0) return NULL;
+        if (b.pos >= b.size) {
+            b.size = read(fd, b.buffer, BUFFER_SIZE);
+            b.pos = 0;
+            if (b.size <= 0) {
+                if (line_size > 0) {
+                    line[line_size] = '\0';
+                    return line;
+                }
+                free(line);
+                return NULL;
+            }
         }
 
-        // Scan for newline
-        char *nl = memchr(b.buffer + b.start, '\n', b.end - b.start);
+        size_t remaining = b.size - b.pos;
+        char *nl = memchr(b.buffer + b.pos, '\n', remaining);
+        size_t len = nl ? (size_t)(nl - (b.buffer + b.pos)) : remaining;
+
+        if (line_size + len + 1 > capacity) {
+            capacity = (line_size + len + 1) * 2;
+            char *new_line = realloc(line, capacity);
+            if (!new_line) {
+                free(line);
+                return NULL;
+            }
+            line = new_line;
+        }
+
+        memcpy(line + line_size, b.buffer + b.pos, len);
+        line_size += len;
+        b.pos += len + (nl ? 1 : 0);
+
         if (nl) {
-            size_t line_len = nl - (b.buffer + b.start) + 1;
-            char *line = malloc(line_len + 1);
-            memcpy(line, b.buffer + b.start, line_len);
-            line[line_len] = '\0';
-            b.start += line_len;
+            line[line_size] = '\0';
             return line;
         }
-
-        // No newline - accumulate
-        char *accumulated = malloc(b.end - b.start + 1);
-        memcpy(accumulated, b.buffer + b.start, b.end - b.start);
-        accumulated[b.end - b.start] = '\0';
-        b.start = b.end;
     }
 }
 
-
-
-
-char output_buffer[65536];
+char output_buffer[OUTPUT_BUFFER_SIZE];
 size_t buffer_pos = 0;
 
 void flush_buffer() {
-    if (buffer_pos > 0) {
-        write(1, output_buffer, buffer_pos);
-        buffer_pos = 0;
-    }
+    write(1, output_buffer, buffer_pos);
+    buffer_pos = 0;
 }
 
-void buffered_write(const char *str) {
-    size_t len = strlen(str);
-    
+void buffered_write(const char *str, size_t len) {
     while (len > 0) {
-        size_t space = 4096 - buffer_pos;
+        size_t space = OUTPUT_BUFFER_SIZE - buffer_pos;
         size_t to_copy = len < space ? len : space;
-        
+
         memcpy(output_buffer + buffer_pos, str, to_copy);
         buffer_pos += to_copy;
         str += to_copy;
         len -= to_copy;
-        
-        if (buffer_pos == 4096) {
+
+        if (buffer_pos >= OUTPUT_BUFFER_SIZE) {
             flush_buffer();
         }
     }
 }
 
+unsigned long hash(char *key, size_t table_size) {
+    unsigned long h = 0;
+    for (; *key; ++key) {
+        h = (h * 31) + *key;
+    }
+    return h % table_size;
+}
+
+unsigned long hash2(char *key) {
+    unsigned long h = 0;
+    for (; *key; ++key) {
+        h = (h * 17) + *key;
+    }
+    return h | 1; // Ensure odd number for better probing
+}
+
 t_hash_table *ht_create(size_t size) {
     t_hash_table *ht = malloc(sizeof(t_hash_table));
+    if (!ht) return NULL;
     ht->size = size;
-    ht->buckets = calloc(size, sizeof(t_node *));
+    ht->count = 0;
+    ht->entries = calloc(size, sizeof(t_entry));
+    if (!ht->entries) {
+        free(ht);
+        return NULL;
+    }
     return ht;
 }
 
-// hash function 
+// Function prototype to resolve implicit declaration
+void ht_insert(t_hash_table *ht, char *key, char *value);
 
-unsigned long hash(char *key, size_t table_size) {
-    unsigned long hash = 5381;
-    int c;
-    while ((c = *key++))
-        hash = ((hash << 5) + hash) + c;
-    return hash % table_size;
+void ht_resize(t_hash_table *ht) {
+    size_t new_size = ht->size * 2;
+    t_entry *old_entries = ht->entries;
+    size_t old_size = ht->size;
+
+    ht->entries = calloc(new_size, sizeof(t_entry));
+    if (!ht->entries) {
+        ht->entries = old_entries;
+        return;
+    }
+    ht->size = new_size;
+    ht->count = 0;
+
+    for (size_t i = 0; i < old_size; i++) {
+        if (old_entries[i].occupied == 1) {
+            ht_insert(ht, old_entries[i].key, old_entries[i].value);
+            free(old_entries[i].key);
+            free(old_entries[i].value);
+        }
+    }
+    free(old_entries);
 }
 
 void ht_insert(t_hash_table *ht, char *key, char *value) {
-    unsigned long index = hash(key, ht->size);
-    t_node *node = ht->buckets[index];
-    while (node)
-    {
-        if (strcmp(node->key, key) == 0)
-        {
-            free(node->value);
-            node->value = strdup(value);
+    if ((double)(ht->count + 1) / ht->size > MAX_LOAD_FACTOR) {
+        ht_resize(ht);
+    }
+
+    unsigned long h1 = hash(key, ht->size);
+    unsigned long h2 = hash2(key);
+    size_t index = h1;
+
+    while (ht->entries[index].occupied == 1) {
+        if (strcmp(ht->entries[index].key, key) == 0) {
+            free(ht->entries[index].value);
+            ht->entries[index].value = strdup(value);
             return;
         }
-        node = node->next;
+        index = (index + h2) % ht->size;
     }
-    t_node *new_node = malloc(sizeof(t_node));
-    new_node->key = strdup(key);
-    new_node->value = strdup(value);
-    new_node->next = ht->buckets[index];
-    ht->buckets[index] = new_node;
+
+    if (ht->entries[index].occupied == 0) {
+        ht->count++;
+    }
+    ht->entries[index].key = strdup(key);
+    ht->entries[index].value = strdup(value);
+    ht->entries[index].occupied = 1;
 }
 
 char *ht_search(t_hash_table *ht, char *key) {
-    unsigned long index = hash(key, ht->size);
-    t_node *node = ht->buckets[index];
-    
-    while (node) {
-        if (strcmp(node->key, key) == 0)
-            return node->value;
-        node = node->next;
+    unsigned long h1 = hash(key, ht->size);
+    unsigned long h2 = hash2(key);
+    size_t index = h1;
+
+    while (ht->entries[index].occupied != 0) {
+        if (ht->entries[index].occupied == 1 && strcmp(ht->entries[index].key, key) == 0) {
+            return ht->entries[index].value;
+        }
+        index = (index + h2) % ht->size;
     }
     return NULL;
 }
 
 void ht_free(t_hash_table *ht) {
     for (size_t i = 0; i < ht->size; i++) {
-        t_node *node = ht->buckets[i];
-        while (node) {
-            t_node *temp = node;
-            node = node->next;
-            free(temp->key);
-            free(temp->value);
-            free(temp);
+        if (ht->entries[i].occupied == 1) {
+            free(ht->entries[i].key);
+            free(ht->entries[i].value);
         }
     }
-    free(ht->buckets);
+    free(ht->entries);
     free(ht);
 }
-#include <stdio.h>
 
-int main()
-{
-    char *result;
-    // char *bulk_write;
-    t_hash_table *ht = ht_create(100000003);
+int main(void) {
+    t_hash_table *ht = ht_create(INITIAL_TABLE_SIZE);
+    if (!ht) return 1;
 
-    unsigned long long i = 0;
-    char *key = NULL;
-    char *value = NULL;
+    char *key, *value, *result;
 
-    // First loop
-    while (1)
-    {
-        key = get_line(0);
-        if (key && key[strlen(key) - 1] == '\n')
-            key[strlen(key) - 1] = '\0';
-        if (!key || !key[0])
-        {
+    // Insertion Phase
+    while ((key = get_line(0))) {
+        if (!*key) {
             free(key);
             break;
         }
-
         value = get_line(0);
-        if (value && value[strlen(value) - 1] == '\n')
-            value[strlen(value) - 1] = '\0';
-        printf("key %s | value %s\n", key, value);
-        if (!value || !value[0])
-        {
-            printf("Error: value is empty\n");
+        if (!value) {
             free(key);
-            free(value);
-            ht_free(ht);
-            return 1;
+            break;
         }
-        ht_insert(ht, key, value);
-
+        if (*key && *value) {
+            ht_insert(ht, key, value);
+        }
         free(key);
         free(value);
-        i++;
     }
 
-    // Second loop
-    while (1)
-    {
-        key = get_line(0);
-        if (key && key[strlen(key) - 1] == '\n')
-            key[strlen(key) - 1] = '\0';
-        if (!key || !key[0])
-        {
+    // Search Phase
+    while ((key = get_line(0))) {
+        if (!*key) {
             free(key);
-            break;
+            continue;
         }
         result = ht_search(ht, key);
-        
-        if (!result)
-        {
-            write(1, key, strlen(key));
-            write(1, ":not found\n", 11);
-        }
-        else
-        {
-            // write(1, key, strlen(key));
+        if (result) {
             write(1, result, strlen(result));
             write(1, "\n", 1);
+        } else {
+            write(1, key, strlen(key));
+            write(1, ": not found\n", 12);
         }
         free(key);
     }
+
     flush_buffer();
     ht_free(ht);
+    return 0;
 }

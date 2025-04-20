@@ -5,7 +5,7 @@ def random_word(length=32):
     return ''.join(random.choices(string.ascii_lowercase, k=length))
 
 def generate_10mb_test(filename="test.htr"):
-    target_size =  1024 * 1024  # 100MB
+    target_size =  100 * 1024 * 1024  # 100MB
     written = 0
     keys = []
 
