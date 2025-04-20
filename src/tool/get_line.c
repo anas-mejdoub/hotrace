@@ -6,7 +6,7 @@
 /*   By: yabenman <yabenman@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 17:01:30 by yabenman          #+#    #+#             */
-/*   Updated: 2025/04/20 17:01:51 by yabenman         ###   ########.fr       */
+/*   Updated: 2025/04/20 17:09:05 by yabenman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ char *get_line(int fd) {
 
         if (line_size + len + 1 > capacity) {
             capacity = (line_size + len + 1) * 2;
-            char *new_line = realloc(line, capacity);
+            char *new_line = ft_realloc(line, capacity);
             if (!new_line) {
                 free(line);
                 return NULL;

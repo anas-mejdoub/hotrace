@@ -6,7 +6,7 @@
 /*   By: yabenman <yabenman@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:30:10 by amejdoub          #+#    #+#             */
-/*   Updated: 2025/04/20 17:00:49 by yabenman         ###   ########.fr       */
+/*   Updated: 2025/04/20 17:09:56 by yabenman         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ typedef struct {
     size_t size;
 } InputBuffer;
 
-char		*get_next_line(int fd);
+// char		*get_next_line(int fd);
 char		*ft_strjoin(char *s1, char *s2);
 void		*ft_memcpy(void *dest, const void *src, size_t n);
 void		*ft_memchr(const void *s, int c, size_t n);
@@ -51,5 +51,7 @@ size_t		ft_strlen2(const char *s);
 int			ft_strcmp(const char *str1, const char *str2);
 void		ft_bzero(void *s, size_t n);
 void		*ft_calloc(size_t num_elements, size_t element_size);
+char *get_line(int fd);
+void *ft_realloc(void *ptr, size_t size);
 
 #endif
