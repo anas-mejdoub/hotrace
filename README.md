@@ -1,0 +1,1 @@
+Hotrace is a command line program, made in a maximum of 48 hours. The aim of this project is to make a tiny search engine, that reads data from standard input and displays results directly into standard output.
